@@ -3,7 +3,6 @@ from models import UNet_timeconv, UNet_timeconv_cross, UNet_timeconv_deviation
 from dataset import Dataset_x4_y1
 import torch
 
-
 if __name__ == '__main__':
     print('Okaaay - Let\'s go...')
     device = ("cuda" if torch.cuda.is_available() else "cpu")

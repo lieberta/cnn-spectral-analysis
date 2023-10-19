@@ -34,7 +34,6 @@ CNN3D1D[1] = dataCNN3D1D['trainy']
 CNN3D1D[2] = dataCNN3D1D['valx']+1
 CNN3D1D[3] = dataCNN3D1D['valy']
 
-
 #takes a Model List (CNN3D1D or CNN1D3D) and gives out the improvement in comparison to CNN3D
 def calculate_improvementlist(List):
     list=[]
@@ -42,8 +41,6 @@ def calculate_improvementlist(List):
         improvement = round((List[3][i] - CNN3D[3][i]) / List[3][i] * 100,2) # the improvement in epoch i+1 rounded to 2 decimals
         list.append(improvement)
     return list
-
-
 def create_plot():
     plt.plot(CNN1D3D[0], CNN1D3D[1], color='green', linestyle= '-', label='Trainloss CNN1D3D')
     plt.plot(CNN1D3D[2], CNN1D3D[3], color='green', linestyle= '--', label='Validationloss CNN1D3D')
@@ -69,8 +66,6 @@ def create_plot():
 
     plt.savefig(plotfilename)
     plt.show()
-
-
 # creates a .csv with every i-th entry, multiply loss with e3 and round it to 4 decimals
 def create_csv(modulo):
     improvementsCNN1D3D = calculate_improvementlist(CNN1D3D)

@@ -10,7 +10,6 @@ import time
 import os # to check if a plot already exists
 from torchsummary import summary
 import json
-
 class BaseModel(nn.Module):
     def __init__(self):
         super(BaseModel, self).__init__()
