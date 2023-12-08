@@ -1,6 +1,6 @@
 #from training import train
-from models import UNet_timeconv, UNet_timeconv_cross, UNet_timeconv_deviation
-from dataset import Dataset_x4_y1
+from models import UNet
+from dataset import CustomImageDataset
 import torch
 
 if __name__ == '__main__':
@@ -12,10 +12,11 @@ if __name__ == '__main__':
     batch = 8   # open for testing
     epochs = 50
 
+    channels = 128
     # this is for version 2 'training_class':
-    model_name = f'UNet_3D_1D_2Layer_deviation_0dropout_0sideconnections_epoch{epochs}_lr{lr}'
-    dataset = Dataset_x4_y1()
-    model = UNet_timeconv_deviation(d1=61, d2=81, d3=31).to(device)
+    model_name = f'UNet_2D_2Layer_0dropout_{channels}channels_epoch{epochs}_lr{lr}'
+    dataset = CustomImageDataset()
+    model = UNet(d1=256, d2=16,channels=channels).to(device)
     model.train_model(dataset = dataset, num_epochs= epochs,batch_size= batch,
                       learning_rate=lr,model_name=model_name)
 

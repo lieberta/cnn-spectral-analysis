@@ -1,14 +1,12 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from dataset import Dataset_x4_y1, Dataset_x1_y1
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 import math
 import time
 import os # to check if a plot already exists
-from torchsummary import summary
 import json
 class BaseModel(nn.Module):
     def __init__(self):
@@ -51,10 +49,10 @@ class BaseModel(nn.Module):
             # Training loop
             self.train()
             loop = tqdm(train_loader, total=len(train_loader), leave=True)
-            for i, (input, target) in enumerate(loop):
+            for i, input in enumerate(loop):
                 # Forward pass, loss calculation, backward pass, optimization, etc.
-                input = input.to(device)
-                target = target.to(device)
+                input = input.double().to(device)
+                target = input
                 outputs = self(input.double())
                 loss = criterion(outputs, target)
                 optimizer.zero_grad()
@@ -80,9 +78,9 @@ class BaseModel(nn.Module):
             # Create a tqdm progress bar for the validation loop
 
             with torch.no_grad():
-                for ind, (input, target) in enumerate(val_loader):
-                    input = input.to(device)
-                    target = target.to(device)
+                for ind, input in enumerate(val_loader):
+                    input = input.double().to(device)
+                    target = input
                     outputs = self(input.double())
                     loss = criterion(outputs, target)
                     val_loss+=loss.item()
@@ -93,6 +91,7 @@ class BaseModel(nn.Module):
 
             # Save the model after each epoch
             self.save_model(epoch, model_name)
+            self.save_model(model_name) # overwrite the saved version of model_name with the newest epoch
 
 
 
@@ -107,6 +106,9 @@ class BaseModel(nn.Module):
         os.makedirs(model_dir, exist_ok=True)
         model_path = os.path.join(model_dir, f"epoch_{epoch}.pth")
         torch.save(self.state_dict(), model_path)
+
+        model_path = os.path.join(model_dir, f"{model_name}.pth")
+        torch.save(self.state_dict(), model_path) # overwrites a .pth with its latest version
 
     def save_loss_plot(self, model_name, num_epochs, train_losses, val_losses):
         # Create a list of epochs for the x-axis
