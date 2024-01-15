@@ -17,7 +17,7 @@ class EncoderBlock(nn.Module):
         #self.conv2 = nn.Conv2d(out_c, out_c, kernel_size=3, padding=1)
         #self.bn2 = nn.BatchNorm2d(out_c)
         self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2) ######################
 
     def forward(self, x):
         x = self.dropout(self.relu(self.bn1(self.conv1(x))))
@@ -48,7 +48,7 @@ class UNet(BaseModel):
     # this is a new version of CNN3D1D with cross connections, but only 2 blocks deep
     # maxpooling instead of step size and additional conv layers in each block
     # cross means it has crossconnections between layers
-    def __init__(self, d1 = 256, d2 = 16, channels=64):
+    def __init__(self, d1 = 256, d2 = 16, channels=64, dropout=0):
         super(UNet, self).__init__()
         # initialize the latent space dimensions:
         self.d1 = math.floor(math.floor(d1/2)/2)
@@ -59,11 +59,12 @@ class UNet(BaseModel):
         self.channel_parameter = channels
 
         # Encoder
-        self.encoder1 = EncoderBlock(in_c = 1, out_c = self.channel_parameter,dropout = 0)
-        self.encoder2 = EncoderBlock(in_c = self.channel_parameter, out_c = 2*self.channel_parameter, dropout = 0)
+        self.encoder1 = EncoderBlock(in_c = 1, out_c = self.channel_parameter,dropout = dropout)
+        self.encoder2 = EncoderBlock(in_c = self.channel_parameter, out_c = 2*self.channel_parameter, dropout = dropout)
+
         # Decoder
-        self.dblock1=DecoderBlock(2*self.channel_parameter, self.channel_parameter,padding=(0,0))    # additional 0 channels for the crossconnection
-        self.dblock2=DecoderBlock(self.channel_parameter,1,padding=(0,0))    # additional 0 channels for the crossconnection
+        self.dblock1=DecoderBlock(2*self.channel_parameter, self.channel_parameter,dropout = dropout,padding=(0,0))    # additional 0 channels for the crossconnection
+        self.dblock2=DecoderBlock(self.channel_parameter,1,dropout = dropout,padding=(0,0))    # additional 0 channels for the crossconnection
 
 
     def forward(self, x):

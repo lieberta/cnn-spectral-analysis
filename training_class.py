@@ -91,7 +91,6 @@ class BaseModel(nn.Module):
 
             # Save the model after each epoch
             self.save_model(epoch, model_name)
-            self.save_model(model_name) # overwrite the saved version of model_name with the newest epoch
 
 
 
