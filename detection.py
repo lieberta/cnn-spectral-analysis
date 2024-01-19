@@ -17,14 +17,16 @@ criterion = nn.MSELoss()
 dataset = CustomImageDataset()
 
 
-channels= 8
+channels= 4
+dropout= 0.2
 model = UNet(d1=256,d2=16,channels=channels).to(device)
 
 
 model_name =[
-    f'UNet_2D_2Layer_0dropout_{channels}channels_epoch50_lr0.001'
+    f'UNet_2D_2Layer_{dropout}dropout_{channels}channels_epoch50_lr0.001'
 
 ]
+
 i = 0 # chose one Modelname out of the list
 
 
@@ -42,6 +44,13 @@ test_path ="./data/database_autoencoder/IE_2D_random_setup_sound/B_scans/testset
 
 test_set = DataLoader(dataset=CustomImageDataset(path = test_path), shuffle=False, batch_size=1)
 anomaly_set = DataLoader(dataset=CustomImageDataset(path = anomaly_path), shuffle=False, batch_size=1)
+
+# Print the length of the test set
+print("Length of Test Set:", len(test_set))
+
+# Print the length of the anomaly set
+print("Length of Anomaly Set:", len(anomaly_set))
+
 
 def loss_list(set):
     loss_set = []

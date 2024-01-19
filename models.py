@@ -81,16 +81,27 @@ class UNet(BaseModel):
 
         return x
 
+class UNet_color(UNet):
+    # this is a new version of CNN3D1D with cross connections, but only 2 blocks deep
+    # maxpooling instead of step size and additional conv layers in each block
+    # cross means it has crossconnections between layers
+    def __init__(self, d1 = 256, d2 = 16, channels=64, dropout=0):
+        super(UNet_color, self).__init__(d1, d2, channels, dropout)
+
+        # override the channels
+        self.encoder1 = EncoderBlock(in_c = 3, out_c = self.channel_parameter,dropout = dropout)
+        self.dblock2=DecoderBlock(self.channel_parameter,3,dropout = dropout,padding=(0,0))    # additional 0 channels for the crossconnection
+
 
 if __name__ == '__main__':
     # work in progress on UNet_timeconv
 
 
-    model = UNet().cuda()
+    model = UNet_color().cuda() #UNet().cuda()
 
-    #batchnorm = Batchnorm().cuda()
 
-    x = torch.arange(1*16*256).reshape(1, 1, 256,16).cuda() #(batch, timesteps,input_channels, 61,81,31)
+    x = torch.arange(3*16*256).reshape(1, 3, 256,16).cuda()#(1*16*256).reshape(1, 1, 256,16).cuda()
+
 
     #btensor = batchnorm(x.float())
 
