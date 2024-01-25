@@ -95,7 +95,7 @@ class UNet_color(UNet):
 
 if __name__ == '__main__':
     # work in progress on UNet_timeconv
-
+    print(torch.cuda.is_available())
 
     model = UNet_color().cuda() #UNet().cuda()
 

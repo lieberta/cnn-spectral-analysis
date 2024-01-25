@@ -5,13 +5,17 @@ from PIL import Image
 import os
 import matplotlib.pyplot as plt
 class CustomImageDataset(Dataset):
-    def __init__(self, path = "./data/database_autoencoder/IE_2D_random_setup_sound/B_scans/sound", transform = None):
-        #self.image_dir = "./data/database_autoencoder/IE_2D_random_setup_sound/B_scans/sound"
+    def __init__(self, path = None, transform = None):
+
         if transform == 'gray':
             self.image_dir = "./data/database_autoencoder/IE_2D_random_setup_sound/B_scans/sound"
 
         if transform == 'color':
             self.image_dir = "./data/database_autoencoder/IE_2D_random_setup_sound/B_scans_rgb/sound"
+
+        if path != None: # if you additionally include a path to the initialization then it overrides the train-setpath
+            self.image_dir = path
+
 
         self.image_files = self.get_all_image_files(self.image_dir)
 
@@ -20,7 +24,6 @@ class CustomImageDataset(Dataset):
                             transforms.ToTensor()])
         if transform == 'color':
             self.transform = transforms.Compose([
-                transforms.Lambda(lambda img: img.convert('RGB')),  # Convert image to RGB
                 transforms.ToTensor()  # Convert images to PyTorch tensors with RGB channels
             ])  # Convert images to PyTorch tensors with RGB channels
 
@@ -40,10 +43,9 @@ class CustomImageDataset(Dataset):
     def __getitem__(self, idx):
         img_path = self.image_files[idx]
         image = Image.open(img_path)
-
-        if self.transform:
-            image = self.transform(image)
-
+        image = self.transform(image)
+        if image.shape[0] == 4:
+            image = image[:3, :, :]
         return image
 
 class ModifiedImageDataset(CustomImageDataset):
