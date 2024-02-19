@@ -12,16 +12,16 @@ if __name__ == '__main__':
     batch = 8   # open for testing
     epochs = 50
     dropout = 0
-    channels = 8
+    channels = 128
     color = 'color'
 
     # this is for version 2 'training_class':
-    model_name = f'UNet_2D_2Layer{color}_{dropout}dropout_{channels}channels_epoch{epochs}_lr{lr}'
+    model_name = f'UNet_2D_2Layer_{color}_{dropout}dropout_{channels}channels_epoch{epochs}_lr{lr}'
 
     dataset = CustomImageDataset(transform = 'color') # transform = 'gray' for grayscale pictures
     model = UNet_color(d1=256, d2=16,channels=channels, dropout=dropout).to(device)
     model.train_model(dataset = dataset, num_epochs= epochs,batch_size= batch,
-                      learning_rate=lr,model_name=model_name)
+                      learning_rate=lr, model_name=model_name)
 
 
 

@@ -39,22 +39,38 @@ def calculate_confusion_matrix_elements(losses, threshold, is_anomaly):
 device = "cuda" if torch.cuda.is_available() else "cpu"
 criterion = nn.MSELoss()
 
-channels = 8
+channels = 128
 dropout = 0
 model = UNet_color(d1=256, d2=16, channels=channels).to(device)
 color = 'color'
 i = 0 # pick a name out of the model name list
 
-model_name = [f'UNet_2D_2Layer{color}_{dropout}dropout_{channels}channels_epoch50_lr0.001']
+model_name = [f'UNet_2D_2Layer_{color}_{dropout}dropout_{channels}channels_epoch50_lr0.001']
 model_folder = f'./models/{model_name[i]}'
 model_path = f'{model_folder}/{model_name[i]}.pth'
+# alternative Model:
+# model_path = f'{model_folder}/epoch_47.pth'
 
 model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
 
+# paths consists of directories for simulated and realworld data, i.e. path to simulated anomalies: paths['simulated']['defect']
+paths = {'training':{'sound':"./data/database_autoencoder/IE_2D_random_setup_sound/B_scans_rgb/sound", 'defect':'./data/database_autoencoder/testdataset_Europa_front/B_scans_rgb/defect'},
+        'simulated':{'sound': "./data/database_autoencoder/testdataset_sound/B_scans_rgb", 'defect':"./data/database_autoencoder/IE_2D_random_setup_honeycomb/B_scans_rgb/defect"},
+        'realworld front':{'sound': './data/database_autoencoder/testdataset_Europa_front/B_scans_rgb/sound', 'defect': './data/database_autoencoder/testdataset_Europa_front/B_scans_rgb/defect'},
+        'realworld back' :{'sound': './data/database_autoencoder/testdataset_Europa_back/B_scans_rgb/sound', 'defect': './data/database_autoencoder/testdataset_Europa_back/B_scans_rgb/defect'},
+         'realworld denoised front': {'sound': './data/database_autoencoder/testdataset_Europa_front/B_scans_rgb_denoised/sound',
+                             'defect': './data/database_autoencoder/testdataset_Europa_front/B_scans_rgb_denoised/defect'},
+         'realworld denoised back': {'sound': './data/database_autoencoder/testdataset_Europa_back/B_scans_rgb_denoised/sound',
+                            'defect': './data/database_autoencoder/testdataset_Europa_back/B_scans_rgb_denoised/defect'},
+         'realworld obvious': {'sound': './data/database_autoencoder/testdataset_meas_obvious/B_scans_rgb/sound', 'defect': './data/database_autoencoder/testdataset_meas_obvious/B_scans_rgb/defect'}
+       }
+
+data_key = 'realworld front' # keyword describing the dataset
 # Load datasets
-anomaly_path = "./data/database_autoencoder/IE_2D_random_setup_honeycomb/B_scans_rgb/defect"
-test_path = "./data/database_autoencoder/testdataset_sound/B_scans_rgb"
+test_path = paths[data_key]['sound']
+anomaly_path = paths[data_key]['defect']
+
 test_set = DataLoader(dataset=CustomImageDataset(path=test_path, transform=color), shuffle=False, batch_size=1)
 anomaly_set = DataLoader(dataset=CustomImageDataset(path=anomaly_path, transform=color), shuffle=False, batch_size=1)
 
@@ -87,7 +103,7 @@ precision = precision_score([1]*len(anomaly_losses) + [0]*len(test_losses), [1 i
 specificity = total_tn / (total_tn + total_fp) if (total_tn + total_fp) != 0 else 0
 
 # Prepare for plotting and saving results
-detection_folder = f'{model_folder}/detection_plot'
+detection_folder = f'{model_folder}/detection_plot/{data_key}'
 os.makedirs(detection_folder, exist_ok=True)
 
 # Save metrics to a .txt file
@@ -133,9 +149,10 @@ plt.show()
 
 # Plot Loss Comparison
 plt.figure(figsize=(10, 6))
-x_range = range(1, len(test_losses) + 1)
-plt.plot(x_range, test_losses, 'g', label='Test Losses')  # 'g' is for green color
-plt.plot(x_range, anomaly_losses, 'r', label='Anomaly Losses')  # 'r' is for red color
+x_range_test = range(1, len(test_losses) + 1)
+x_range_anomaly = range(1, len(anomaly_losses) + 1)
+plt.plot(x_range_test, test_losses, 'g', label='Test Losses')  # 'g' is for green color
+plt.plot(x_range_anomaly, anomaly_losses, 'r', label='Anomaly Losses')  # 'r' is for red color
 plt.xlabel('Sample')
 plt.ylabel('Loss')
 plt.title(f'Loss Comparison {model_name[i]}')

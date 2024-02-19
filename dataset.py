@@ -7,26 +7,36 @@ import matplotlib.pyplot as plt
 class CustomImageDataset(Dataset):
     def __init__(self, path = None, transform = None):
 
-        if transform == 'gray':
+        if path ==None and transform == 'gray':
             self.image_dir = "./data/database_autoencoder/IE_2D_random_setup_sound/B_scans/sound"
 
-        if transform == 'color':
+        elif path == None and transform == 'color':
             self.image_dir = "./data/database_autoencoder/IE_2D_random_setup_sound/B_scans_rgb/sound"
 
-        if path != None: # if you additionally include a path to the initialization then it overrides the train-setpath
+        elif path == None and transform == 'color_ny600':
+            self.image_dir = "./data/database_autoencoder/IE_2D_random_setup_sound/B_scans_rgb_ny600/sound"
+
+        elif path != None: # if you additionally include a path to the initialization then it overrides the train-setpath
             self.image_dir = path
 
 
         self.image_files = self.get_all_image_files(self.image_dir)
 
+        # Transform selection
         if transform == 'gray':
-            self.transform = transforms.Compose([transforms.Grayscale(num_output_channels=1),  # Ensure images are loaded as grayscale
-                            transforms.ToTensor()])
-        if transform == 'color':
             self.transform = transforms.Compose([
-                transforms.ToTensor()  # Convert images to PyTorch tensors with RGB channels
-            ])  # Convert images to PyTorch tensors with RGB channels
-
+                transforms.Grayscale(num_output_channels=1),
+                transforms.ToTensor(),
+            ])
+        elif transform in ['color', 'color_ny600']:
+            self.transform = transforms.Compose([
+                transforms.ToTensor(),
+            ])
+        else:
+            # Fallback or default transformation
+            self.transform = transforms.Compose([
+                transforms.ToTensor(),
+            ])
 
     def get_all_image_files(self, dir):
         """Recursively fetch all image file paths from a directory and its subdirectories."""
@@ -47,6 +57,7 @@ class CustomImageDataset(Dataset):
         if image.shape[0] == 4:
             image = image[:3, :, :]
         return image
+
 
 class ModifiedImageDataset(CustomImageDataset):
     def __init__(self, path, transform=None):
