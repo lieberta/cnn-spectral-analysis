@@ -12,7 +12,7 @@ if __name__ == '__main__':
     batch = 8   # open for testing
     epochs = 50
     dropout = 0
-    channels = 128
+    channels = 128*32
     color = 'color'
 
     # this is for version 2 'training_class':
