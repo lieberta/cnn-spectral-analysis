@@ -98,16 +98,35 @@ class BaseModel(nn.Module):
         self.save_proc_time(model_name, tic)
         self.save_losses_data(model_name, num_epochs, train_losses, val_losses)
 
-
-
     def save_model(self, epoch, model_name):
         model_dir = os.path.join("models", model_name)
         os.makedirs(model_dir, exist_ok=True)
-        model_path = os.path.join(model_dir, f"epoch_{epoch}.pth")
+
+        # Base model path for checking existing epoch files
+        base_model_path = os.path.join(model_dir, f"epoch_{epoch}.pth")
+
+        # Check if the model file for the current epoch exists
+        if os.path.exists(base_model_path):
+            # Find the next available epoch number
+            i = 1  # Start counting from 1
+            new_model_path = os.path.join(model_dir, f"epoch_{epoch + i}.pth")
+            # Keep incrementing i until a new, non-existing model path is found
+            while os.path.exists(new_model_path):
+                i += 1
+                new_model_path = os.path.join(model_dir, f"epoch_{epoch + i}.pth")
+
+            # Update the model_path with the new epoch number
+            model_path = new_model_path
+        else:
+            # If the model file for the current epoch does not exist, use the base model path
+            model_path = base_model_path
+
+        # Save the model for the current/new epoch
         torch.save(self.state_dict(), model_path)
 
-        model_path = os.path.join(model_dir, f"{model_name}.pth")
-        torch.save(self.state_dict(), model_path) # overwrites a .pth with its latest version
+        # Always save/overwrite the .pth with its latest version
+        latest_model_path = os.path.join(model_dir, f"{model_name}.pth")
+        torch.save(self.state_dict(), latest_model_path)
 
     def save_loss_plot(self, model_name, num_epochs, train_losses, val_losses):
         # Create a list of epochs for the x-axis

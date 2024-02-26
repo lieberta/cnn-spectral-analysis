@@ -1,4 +1,5 @@
-#from training import train
+
+import os
 from models import UNet, UNet_color
 from dataset import CustomImageDataset
 import torch
@@ -10,7 +11,7 @@ if __name__ == '__main__':
 
     lr = 0.001 # 0.001 for CNN1D3D, 0.0001 for CNN1D
     batch = 8   # open for testing
-    epochs = 50
+    epochs = 4
     dropout = 0
     channels = 128*32
     color = 'color'
@@ -20,6 +21,21 @@ if __name__ == '__main__':
 
     dataset = CustomImageDataset(transform = 'color') # transform = 'gray' for grayscale pictures
     model = UNet_color(d1=256, d2=16,channels=channels, dropout=dropout).to(device)
+
+
+
+    # Define your model path based on the model name
+    model_dir = os.path.join("models", model_name)
+    model_path = os.path.join(model_dir, f"{model_name}.pth")
+
+    # Check if the model directory and the specific model file exist
+    if os.path.exists(model_dir) and os.path.isfile(model_path):
+        # Load the model
+        model.load_state_dict(torch.load(model_path))
+        print(f"The model '{model_name}' already exists and will be trained further.")
+    else:
+        # If the directory or model file doesn't exist, print this message
+        print(f"A new folder and model '{model_name}' will be created.")
     model.train_model(dataset = dataset, num_epochs= epochs,batch_size= batch,
                       learning_rate=lr, model_name=model_name)
 

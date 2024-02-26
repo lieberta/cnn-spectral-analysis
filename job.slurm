@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=temperature_job		  # create a short name for your job
+#SBATCH --job-name=lieberta_spectralanalysis_code:yellow_job		  # create a short name for your job
 
 #SBATCH --nodes=1                         # node count
 
@@ -10,7 +10,7 @@
 
 #SBATCH --partition=small_gpu
 
-#SBATCH --time=20:00:00                   # total run time limit (HH:MM:SS)
+#SBATCH --time=23:59:00                   # total run time limit (HH:MM:SS)
 
 #SBATCH --mail-type=ALL
 
