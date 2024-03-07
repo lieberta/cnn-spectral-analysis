@@ -1,8 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="lieberta@hsuper-login01.hsu-hh.de:22 password" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="HSUper spectral-analysis-cnn" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
+      <paths name="HSUper condavenv pecnn-venv">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="HSUper spectral-analysis-cnn">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/beegfs/project/bmbf-need/spectral-analysis/cnn-spectral-analysis/" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="lieberta@10.246.58.150:22 password">
         <serverdata>
           <mappings>
@@ -20,6 +34,20 @@
         <serverdata>
           <mappings>
             <mapping deploy="/beegfs/home/l/lieberta/projects/cnn-spectral-analysis" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="lieberta@hsuper-login01.hsu-hh.de:22 password (2)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="lieberta@hsuper-login01.hsu-hh.de:22 password (4)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

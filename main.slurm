@@ -1,12 +1,10 @@
 #!/bin/bash
 
 #SBATCH --job-name=lieberta_spectralanalysis_code:yellow_job		  # create a short name for your job
-
+#SBATCH --error=error
 #SBATCH --nodes=1                         # node count
 
 #SBATCH --ntasks=1                        # total number of tasks across all nodes
-
-#SBATCH --exclusive	                  # if the GPU has to be used solarly
 
 #SBATCH --partition=small_gpu
 
@@ -15,7 +13,6 @@
 #SBATCH --mail-type=ALL
 
 #SBATCH --mail-user=lieberta@hsu-hh.de
-
 
 #SBATCH --output=terminal_output.log
  
