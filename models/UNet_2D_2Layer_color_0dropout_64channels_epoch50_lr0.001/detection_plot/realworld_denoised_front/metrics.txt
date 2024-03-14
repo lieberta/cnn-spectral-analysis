@@ -1,8 +1,0 @@
-Confusion Matrix:
-[[243 297]
- [106 254]]
-F1 Score: 0.557628979143798
-Precision: 0.46098003629764067
-Specificity (True Negative Rate): 0.45
-AUC: 0.5488374485596708
-Optimal Threshold: 0.0017433306202292442

@@ -1,11 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=lieberta_spectralanalysis_code:yellow_job		  # create a short name for your job
+#SBATCH --job-name=SpectralAnalysis		  # create a short name for your job
 #SBATCH --error=error
 #SBATCH --nodes=1                         # node count
 
 #SBATCH --ntasks=1                        # total number of tasks across all nodes
-
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=72
 #SBATCH --partition=small_gpu
 
 #SBATCH --time=23:59:00                   # total run time limit (HH:MM:SS)

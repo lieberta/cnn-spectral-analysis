@@ -44,8 +44,9 @@ dropout = 0
 model = UNet_color(d1=256, d2=16, channels=channels).to(device)
 color = 'color'
 i = 0 # pick a name out of the model name list
+epoch=100
 
-model_name = [f'UNet_2D_2Layer_{color}_{dropout}dropout_{channels}channels_epoch50_lr0.001']
+model_name = [f'UNet_2D_newtrainset_2Layer_{color}_{dropout}dropout_{channels}channels_epoch{epoch}_lr0.001']
 model_folder = f'./models/{model_name[i]}'
 model_path = f'{model_folder}/{model_name[i]}.pth'
 # alternative Model:
@@ -54,108 +55,105 @@ model_path = f'{model_folder}/{model_name[i]}.pth'
 model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
 
-# paths consists of directories for simulated and realworld data, i.e. path to simulated anomalies: paths['simulated']['defect']
-paths = {'training':{'sound':"./data/database_autoencoder/IE_2D_random_setup_sound/B_scans_rgb/sound", 'defect':'./data/database_autoencoder/testdataset_Europa_front/B_scans_rgb/defect'},
-        'simulated':{'sound': "./data/database_autoencoder/testdataset_sound/B_scans_rgb", 'defect':"./data/database_autoencoder/IE_2D_random_setup_honeycomb/B_scans_rgb/defect"},
-        'realworld front':{'sound': './data/database_autoencoder/testdataset_Europa_front/B_scans_rgb/sound', 'defect': './data/database_autoencoder/testdataset_Europa_front/B_scans_rgb/defect'},
-        'realworld back' :{'sound': './data/database_autoencoder/testdataset_Europa_back/B_scans_rgb/sound', 'defect': './data/database_autoencoder/testdataset_Europa_back/B_scans_rgb/defect'},
-         'realworld denoised front': {'sound': './data/database_autoencoder/testdataset_Europa_front/B_scans_rgb_denoised/sound',
-                             'defect': './data/database_autoencoder/testdataset_Europa_front/B_scans_rgb_denoised/defect'},
-         'realworld denoised back': {'sound': './data/database_autoencoder/testdataset_Europa_back/B_scans_rgb_denoised/sound',
-                            'defect': './data/database_autoencoder/testdataset_Europa_back/B_scans_rgb_denoised/defect'},
-         'realworld obvious': {'sound': './data/database_autoencoder/testdataset_meas_obvious/B_scans_rgb/sound', 'defect': './data/database_autoencoder/testdataset_meas_obvious/B_scans_rgb/defect'}
-       }
 
-data_key = 'realworld front' # keyword describing the dataset
-# Load datasets
-test_path = paths[data_key]['sound']
-anomaly_path = paths[data_key]['defect']
+real_world_testpath = '/beegfs/project/bmbf-need/spectral-analysis/cnn-spectral-analysis/data/database_autoencoder/real_world_measured/'
 
-test_set = DataLoader(dataset=CustomImageDataset(path=test_path, transform=color), shuffle=False, batch_size=1)
-anomaly_set = DataLoader(dataset=CustomImageDataset(path=anomaly_path, transform=color), shuffle=False, batch_size=1)
+# Loop through each subdirectory in the real_world_testpath
+for subdir in os.listdir(real_world_testpath):
+    full_subdir_path = os.path.join(real_world_testpath, subdir)
 
-# Calculate losses
-test_losses = loss_list(test_set, model, criterion, device)
-anomaly_losses = loss_list(anomaly_set, model, criterion, device)
+    # Ensure the path is a directory before proceeding
+    if os.path.isdir(full_subdir_path):
+        # Construct the full paths for 'sound' and 'defect'
+        test_path = os.path.join(full_subdir_path, 'B_scans_rgb', 'sound')
+        anomaly_path = os.path.join(full_subdir_path, 'B_scans_rgb', 'defect')
 
-# Combine losses and labels, then calculate ROC curve and AUC
-combined_losses = np.concatenate([test_losses, anomaly_losses])
-combined_labels = np.concatenate([np.zeros(len(test_losses)), np.ones(len(anomaly_losses))])
-fpr, tpr, thresholds = roc_curve(combined_labels, combined_losses)
-roc_auc = auc(fpr, tpr)
 
-# Find optimal threshold
-optimal_idx = np.argmax(tpr - fpr)
-optimal_threshold = thresholds[optimal_idx]
+        test_set = DataLoader(dataset=CustomImageDataset(path=test_path, transform=color), shuffle=False, batch_size=1)
+        anomaly_set = DataLoader(dataset=CustomImageDataset(path=anomaly_path, transform=color), shuffle=False, batch_size=1)
 
-# Calculate confusion matrix elements
-tp, fp, tn, fn = calculate_confusion_matrix_elements(anomaly_losses, optimal_threshold, True)
-tp_test, fp_test, tn_test, fn_test = calculate_confusion_matrix_elements(test_losses, optimal_threshold, False)
-total_tp = tp
-total_fp = fp + fp_test
-total_tn = tn_test
-total_fn = fn + fn_test
+        # Calculate losses
+        test_losses = loss_list(test_set, model, criterion, device)
+        anomaly_losses = loss_list(anomaly_set, model, criterion, device)
 
-# Calculate metrics
-conf_matrix = confusion_matrix([1]*len(anomaly_losses) + [0]*len(test_losses), [1 if loss > optimal_threshold else 0 for loss in anomaly_losses+test_losses])
-f1 = f1_score([1]*len(anomaly_losses) + [0]*len(test_losses), [1 if loss > optimal_threshold else 0 for loss in anomaly_losses+test_losses])
-precision = precision_score([1]*len(anomaly_losses) + [0]*len(test_losses), [1 if loss > optimal_threshold else 0 for loss in anomaly_losses+test_losses])
-specificity = total_tn / (total_tn + total_fp) if (total_tn + total_fp) != 0 else 0
+        # Combine losses and labels, then calculate ROC curve and AUC
+        combined_losses = np.concatenate([test_losses, anomaly_losses])
+        combined_labels = np.concatenate([np.zeros(len(test_losses)), np.ones(len(anomaly_losses))])
+        fpr, tpr, thresholds = roc_curve(combined_labels, combined_losses)
+        roc_auc = auc(fpr, tpr)
 
-# Prepare for plotting and saving results
-detection_folder = f'{model_folder}/detection_plot/{data_key}'
-os.makedirs(detection_folder, exist_ok=True)
+        # Find optimal threshold
+        optimal_idx = np.argmax(tpr - fpr)
+        optimal_threshold = thresholds[optimal_idx]
 
-# Save metrics to a .txt file
-metrics_file_path = os.path.join(detection_folder, 'metrics.txt')
-with open(metrics_file_path, 'w') as file:
-    file.write(f"Confusion Matrix:\n{conf_matrix}\n")
-    file.write(f"F1 Score: {f1}\n")
-    file.write(f"Precision: {precision}\n")
-    file.write(f"Specificity (True Negative Rate): {specificity}\n")
-    file.write(f"AUC: {roc_auc}\n")
-    file.write(f"Optimal Threshold: {optimal_threshold}\n")
+        # Calculate confusion matrix elements
+        tp, fp, tn, fn = calculate_confusion_matrix_elements(anomaly_losses, optimal_threshold, True)
+        tp_test, fp_test, tn_test, fn_test = calculate_confusion_matrix_elements(test_losses, optimal_threshold, False)
+        total_tp = tp
+        total_fp = fp + fp_test
+        total_tn = tn_test
+        total_fn = fn + fn_test
 
-# Print the metrics:
+        # Calculate metrics
+        conf_matrix = confusion_matrix([1]*len(anomaly_losses) + [0]*len(test_losses), [1 if loss > optimal_threshold else 0 for loss in anomaly_losses+test_losses])
+        f1 = f1_score([1]*len(anomaly_losses) + [0]*len(test_losses), [1 if loss > optimal_threshold else 0 for loss in anomaly_losses+test_losses])
+        precision = precision_score([1]*len(anomaly_losses) + [0]*len(test_losses), [1 if loss > optimal_threshold else 0 for loss in anomaly_losses+test_losses])
+        specificity = total_tn / (total_tn + total_fp) if (total_tn + total_fp) != 0 else 0
 
-print(f"Confusion Matrix:\n{conf_matrix}\n")
-print(f"F1 Score: {f1}")
-print(f"Precision: {precision}")
-print(f"Specificity (True Negative Rate): {specificity}")
-print(f"AUC: {roc_auc}")
-print(f"Optimal Threshold: {optimal_threshold}")
+        # Prepare for plotting and saving results
+        detection_folder = f'{model_folder}/detection_plot/{data_key}'
+        os.makedirs(detection_folder, exist_ok=True)
 
-# Plot ROC curve
-plt.figure()
-plt.plot(fpr, tpr, color='blue', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
-plt.plot([0, 1], [0, 1], color='darkorange', lw=2, linestyle='--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Receiver Operating Characteristic')
-plt.legend(loc="lower right")
-plt.savefig(os.path.join(detection_folder, 'roc_curve.png'))
-plt.show()
+        # Save metrics to a .txt file
+        metrics_file_path = os.path.join(detection_folder, 'metrics.txt')
+        with open(metrics_file_path, 'w') as file:
+            file.write(f"Confusion Matrix:\n{conf_matrix}\n")
+            file.write(f"F1 Score: {f1}\n")
+            file.write(f"Precision: {precision}\n")
+            file.write(f"Specificity (True Negative Rate): {specificity}\n")
+            file.write(f"AUC: {roc_auc}\n")
+            file.write(f"Optimal Threshold: {optimal_threshold}\n")
 
-# Plot Confusion Matrix
-plt.figure()
-sns.heatmap(conf_matrix, annot=True, fmt='g')
-plt.xlabel('Predicted labels')
-plt.ylabel('True labels')
-plt.title('Confusion Matrix')
-plt.savefig(os.path.join(detection_folder, 'confusion_matrix.png'))
-plt.show()
+        # Print the metrics:
 
-# Plot Loss Comparison
-plt.figure(figsize=(10, 6))
-x_range_test = range(1, len(test_losses) + 1)
-x_range_anomaly = range(1, len(anomaly_losses) + 1)
-plt.plot(x_range_test, test_losses, 'g', label='Test Losses')  # 'g' is for green color
-plt.plot(x_range_anomaly, anomaly_losses, 'r', label='Anomaly Losses')  # 'r' is for red color
-plt.xlabel('Sample')
-plt.ylabel('Loss')
-plt.title(f'Loss Comparison {model_name[i]}')
-plt.legend()
-plt.savefig(os.path.join(detection_folder, f"loss_comparison_{model_name[i]}.png"))
-plt.show()
+        print(f"Confusion Matrix:\n{conf_matrix}\n")
+        print(f"F1 Score: {f1}")
+        print(f"Precision: {precision}")
+        print(f"Specificity (True Negative Rate): {specificity}")
+        print(f"AUC: {roc_auc}")
+        print(f"Optimal Threshold: {optimal_threshold}")
+
+        # Plot ROC curve
+        plt.figure()
+        plt.plot(fpr, tpr, color='blue', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+        plt.plot([0, 1], [0, 1], color='darkorange', lw=2, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver Operating Characteristic')
+        plt.legend(loc="lower right")
+        plt.savefig(os.path.join(detection_folder, 'roc_curve.png'))
+        plt.show()
+
+        # Plot Confusion Matrix
+        plt.figure()
+        sns.heatmap(conf_matrix, annot=True, fmt='g')
+        plt.xlabel('Predicted labels')
+        plt.ylabel('True labels')
+        plt.title('Confusion Matrix')
+        plt.savefig(os.path.join(detection_folder, 'confusion_matrix.png'))
+        plt.show()
+
+        # Plot Loss Comparison
+        plt.figure(figsize=(10, 6))
+        x_range_test = range(1, len(test_losses) + 1)
+        x_range_anomaly = range(1, len(anomaly_losses) + 1)
+        plt.plot(x_range_test, test_losses, 'g', label='Test Losses')  # 'g' is for green color
+        plt.plot(x_range_anomaly, anomaly_losses, 'r', label='Anomaly Losses')  # 'r' is for red color
+        plt.xlabel('Sample')
+        plt.ylabel('Loss')
+        plt.title(f'Loss Comparison {model_name[i]}')
+        plt.legend()
+        plt.savefig(os.path.join(detection_folder, f"loss_comparison_{model_name[i]}.png"))
+        plt.show()

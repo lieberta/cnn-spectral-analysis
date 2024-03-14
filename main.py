@@ -11,15 +11,15 @@ if __name__ == '__main__':
 
     lr = 0.001 # 0.001 for CNN1D3D, 0.0001 for CNN1D
     batch = 8   # open for testing
-    epochs = 4
+    epochs = 100
     dropout = 0
-    channels = 128*32
+    channels = 128*8 #4 #32
     color = 'color'
 
     # this is for version 2 'training_class':
-    model_name = f'UNet_2D_2Layer_{color}_{dropout}dropout_{channels}channels_epoch{epochs}_lr{lr}'
+    model_name = f'UNet_2D_newtrainset_2Layer_{color}_{dropout}dropout_{channels}channels_epoch{epochs}_lr{lr}'
 
-    dataset = CustomImageDataset(transform = 'color') # transform = 'gray' for grayscale pictures
+    dataset = CustomImageDataset(transform = 'color', path='/beegfs/project/bmbf-need/spectral-analysis/cnn-spectral-analysis/data/Impact_Echo_Machine_Learning_2/database_autoencoder/new_approach/IE_2D_random_setup_sound/B_scans_rgb/sound') # transform = 'gray' for grayscale pictures
     model = UNet_color(d1=256, d2=16,channels=channels, dropout=dropout).to(device)
 
 
