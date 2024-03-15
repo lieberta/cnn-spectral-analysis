@@ -11,7 +11,7 @@
       <excludeFolder url="file://$MODULE_DIR$/models/UNet_2D_newtrainset_2Layer_color_0dropout_1024channels_epoch100_lr0.001" />
       <excludeFolder url="file://$MODULE_DIR$/models/UNet_2D_newtrainset_2Layer_color_0dropout_512channels_epoch100_lr0.001" />
     </content>
-    <orderEntry type="jdk" jdkName="verzweifelter neuer Versuch" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="SpectralAnalysisInterpreter Python 3.8.18" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

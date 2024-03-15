@@ -15,13 +15,15 @@ if __name__ == '__main__':
     dropout = 0
     channels = 128*8 #4 #32
     color = 'color'
+    finetuning= True # a variable that incooperates finetuning
 
     # this is for version 2 'training_class':
     model_name = f'UNet_2D_newtrainset_2Layer_{color}_{dropout}dropout_{channels}channels_epoch{epochs}_lr{lr}'
-
-    dataset = CustomImageDataset(transform = 'color', path='/beegfs/project/bmbf-need/spectral-analysis/cnn-spectral-analysis/data/Impact_Echo_Machine_Learning_2/database_autoencoder/new_approach/IE_2D_random_setup_sound/B_scans_rgb/sound') # transform = 'gray' for grayscale pictures
     model = UNet_color(d1=256, d2=16,channels=channels, dropout=dropout).to(device)
 
+
+    simulationpath = '/beegfs/project/bmbf-need/spectral-analysis/cnn-spectral-analysis/data/Impact_Echo_Machine_Learning_2/database_autoencoder/new_approach/IE_2D_random_setup_sound/B_scans_rgb/sound'
+    finetuningpath = '/beegfs/project/bmbf-need/spectral-analysis/cnn-spectral-analysis/data/Impact_Echo_Machine_Learning_2/database_autoencoder/new_approach/'
 
 
     # Define your model path based on the model name
@@ -36,8 +38,19 @@ if __name__ == '__main__':
     else:
         # If the directory or model file doesn't exist, print this message
         print(f"A new folder and model '{model_name}' will be created.")
-    model.train_model(dataset = dataset, num_epochs= epochs,batch_size= batch,
+
+    if finetuning==True:
+        dataset = CustomImageDataset(transform='color',
+                                     path=finetuningpath)  # transform = 'gray' for grayscale pictures
+        model_name = model_name +'finetuned'
+        model.train_model(dataset = dataset, num_epochs= epochs,batch_size= batch,
                       learning_rate=lr, model_name=model_name)
+    else:
+        dataset = CustomImageDataset(transform='color',
+                                     path=simulationpath)  # transform = 'gray' for grayscale pictures
+        model.train_model(dataset = dataset, num_epochs= epochs,batch_size= batch,
+                      learning_rate=lr, model_name=model_name)
+
 
 
 
