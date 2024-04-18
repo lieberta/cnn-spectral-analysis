@@ -20,7 +20,7 @@
       <paths name="HSUper spectral-analysis-cnnew">
         <serverdata>
           <mappings>
-            <mapping deploy="/projects/cnn-spectral-analysis " local="$PROJECT_DIR$" />
+            <mapping deploy="/projects/cnn-spectral-analysis" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>

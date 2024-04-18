@@ -1,9 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torchsummary import summary    # for summarizing the model
 import math
-from training_class import BaseModel
+from training_class import BaseModel, BaseModel_var
 
 class EncoderBlock(nn.Module):
     # one 3D convolutional block with batchnorm, relu activation and two convolution
@@ -89,25 +88,51 @@ class UNet_color(UNet):
         super(UNet_color, self).__init__(d1, d2, channels, dropout)
 
         # override the channels
-        self.encoder1 = EncoderBlock(in_c = 3, out_c = self.channel_parameter,dropout = dropout)
-        self.dblock2=DecoderBlock(self.channel_parameter,3,dropout = dropout,padding=(0,0))    # additional 0 channels for the crossconnection
+        self.encoder1 = EncoderBlock(in_c = 3, out_c = 3*self.channel_parameter,dropout = dropout)
+
+        # test with times 3
+        self.encoder2 = EncoderBlock(in_c =3* self.channel_parameter, out_c = 3* 2*self.channel_parameter, dropout = dropout)
+        self.dblock1=DecoderBlock(3*2*self.channel_parameter, 3*self.channel_parameter,dropout = dropout,padding=(0,0))    # additional 0 channels for the crossconnection
+
+        self.dblock2=DecoderBlock(3*self.channel_parameter,3,dropout = dropout,padding=(0,0))    # additional 0 channels for the crossconnection
 
 
 
-class UNet_Variational(UNet_color):
+class UNet_Variational(BaseModel_var):
     def __init__(self, d1 = 256, d2 = 16, channels=64, dropout=0):
-        super(UNet_Variational, self).__init__(d1, d2, channels, dropout)
+        super(UNet_Variational, self).__init__()
+        # initialize how much outputchannels the layers should have
+        self.channel_parameter = channels
+
+        # Encoder
+        self.encoder1 = EncoderBlock(in_c=3, out_c=self.channel_parameter, dropout=dropout)
+        self.encoder2 = EncoderBlock(in_c=self.channel_parameter, out_c=2 * self.channel_parameter, dropout=dropout)
+
+        # Decoder
+        self.dblock1 = DecoderBlock(2 * self.channel_parameter, self.channel_parameter, dropout=dropout,
+                                    padding=(0, 0))  # additional 0 channels for the crossconnection
+        self.dblock2 = DecoderBlock(self.channel_parameter, 3, dropout=dropout,
+                                    padding=(0, 0))  # additional 0 channels for the crossconnection
 
         # Middle mu:
-        self.conv1mu = nn.Conv3d(32, 64, kernel_size=3, padding=1, padding_mode='reflect')
-        self.gn1mu = nn.GroupNorm(num_groups=int(64/8), num_channels=64)
-        self.conv2mu = nn.Conv3d(64, 64, kernel_size=3, padding=1, padding_mode='reflect')
-        self.gn2mu = nn.GroupNorm(num_groups=int(64/8), num_channels=64)
+        self.conv1mu = nn.Conv2d(self.channel_parameter * 2, self.channel_parameter * 2, kernel_size=3, padding=1,
+                                 padding_mode='reflect')
+        self.gn1mu = nn.GroupNorm(num_groups=int((self.channel_parameter * 2) / 8),
+                                  num_channels=self.channel_parameter * 2)
+        self.conv2mu = nn.Conv2d(self.channel_parameter * 2, self.channel_parameter * 2, kernel_size=3, padding=1,
+                                 padding_mode='reflect')
+        self.gn2mu = nn.GroupNorm(num_groups=int((self.channel_parameter * 2) / 8),
+                                  num_channels=self.channel_parameter * 2)
+
         # Middle logvar:
-        self.conv1logvar = nn.Conv3d(32, 64, kernel_size=3, padding=1, padding_mode='reflect')
-        self.gn1logvar = nn.GroupNorm(num_groups=int(64/8), num_channels= 64) #nn.BatchNorm3d(out_c)
-        self.conv2logvar = nn.Conv3d(64, 64, kernel_size=3, padding=1, padding_mode='reflect')
-        self.gn2logvar = nn.GroupNorm(num_groups=int(64/8), num_channels=64)
+        self.conv1logvar = nn.Conv2d(self.channel_parameter * 2, self.channel_parameter * 2, kernel_size=3, padding=1,
+                                     padding_mode='reflect')
+        self.gn1logvar = nn.GroupNorm(num_groups=int((self.channel_parameter * 2) / 8),
+                                      num_channels=self.channel_parameter * 2)
+        self.conv2logvar = nn.Conv2d(self.channel_parameter * 2, self.channel_parameter * 2, kernel_size=3, padding=1,
+                                     padding_mode='reflect')
+        self.gn2logvar = nn.GroupNorm(num_groups=int((self.channel_parameter * 2) / 8),
+                                     num_channels = self.channel_parameter * 2)
 
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5*logvar)
@@ -123,7 +148,7 @@ class UNet_Variational(UNet_color):
         mu = self.conv1mu(self.gn1mu(self.conv2mu(self.gn2mu(x))))
         logvar = self.conv1logvar(self.gn1logvar(self.conv2logvar(self.gn2logvar(x))))
 
-        x = reparameterize(mu, logvar)
+        x = self.reparameterize(mu, logvar)
 
         # Decoder steps
         x = self.dblock1(x)
@@ -138,10 +163,11 @@ if __name__ == '__main__':
     # work in progress on UNet_timeconv
     print(torch.cuda.is_available())
 
-    model = UNet_color().cuda() #UNet().cuda()
 
+    model = UNet_color(channels = 128*4)#.cuda() #UNet().cuda()
+    summary(model, input_size=(3, 256,16))
 
-    x = torch.arange(3*16*256).reshape(1, 3, 256,16).cuda()#(1*16*256).reshape(1, 1, 256,16).cuda()
+    x = torch.arange(3*16*256).reshape(1, 3, 256,16)#.cuda()#(1*16*256).reshape(1, 1, 256,16).cuda()
 
 
     #btensor = batchnorm(x.float())
