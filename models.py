@@ -88,6 +88,21 @@ class UNet_color(UNet):
         super(UNet_color, self).__init__(d1, d2, channels, dropout)
 
         # override the channels
+        self.encoder1 = EncoderBlock(in_c = 3, out_c = self.channel_parameter,dropout = dropout)
+
+        # test with times 3
+        self.encoder2 = EncoderBlock(in_c =self.channel_parameter, out_c =  2*self.channel_parameter, dropout = dropout)
+        self.dblock1=DecoderBlock(2*self.channel_parameter, self.channel_parameter,dropout = dropout,padding=(0,0))    # additional 0 channels for the crossconnection
+
+        self.dblock2=DecoderBlock(self.channel_parameter,3,dropout = dropout,padding=(0,0))    # additional 0 channels for the crossconnection
+class UNet_colorx3(UNet):
+    # this is a new version of CNN3D1D with cross connections, but only 2 blocks deep
+    # maxpooling instead of step size and additional conv layers in each block
+    # cross means it has crossconnections between layers
+    def __init__(self, d1 = 256, d2 = 16, channels=64, dropout=0):
+        super(UNet_color, self).__init__(d1, d2, channels, dropout)
+
+        # override the channels
         self.encoder1 = EncoderBlock(in_c = 3, out_c = 3*self.channel_parameter,dropout = dropout)
 
         # test with times 3

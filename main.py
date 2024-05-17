@@ -10,24 +10,26 @@ if __name__ == '__main__':
 
     lr = 0.001 # 0.001 for CNN1D3D, 0.0001 for CNN1D
     batch = 32   # open for testing
-    epoch = 200
+    epoch = 50
     dropout = 0
-    channels = 128*4  #32
+    channels = 128*8  #32
     color = 'color'
     finetuning= False #True # a variable that incooperates finetuning
 
 
-    model_list= [f'UNet_2D_2Blocks_{dropout}dropout_{channels}x3channels_lr{lr}',
-                 f'UNet_2D_VAE_2Layer_{color}_{dropout}dropout_{channels}channels_epoch{epoch}_lr{lr}']
+    model_list= [f'UNet_2D_2Blocks_{dropout}dropout_{channels}channels_lr{lr}',
+                 f'UNet_2D_VAE_2Layer_{color}_{dropout}dropout_{channels}channels_epoch{epoch}_lr{lr}',
+                 f'UNet_2D_2Blocks_{dropout}dropout_{channels}channels_lr{lr}_nopretraining']
     # this is for version 2 'training_class':
 
-    model_name = model_list[0]
+    model_name = model_list[2]
+    model = UNet_color(d1=256, d2=16, channels=channels, dropout=dropout).to(device)
 
     # chose Model based on Modelname
-    if model_name == model_list[0]:
-        model = UNet_color(d1=256, d2=16, channels=channels, dropout=dropout).to(device)
-    elif model_name ==model_list[1]:
-        model = UNet_Variational(d1=256, d2=16, channels=channels, dropout=dropout).to(device)
+    #if model_name == model_list[0] or model_name == model_list[2]:
+        #model = UNet_color(d1=256, d2=16, channels=channels, dropout=dropout).to(device)
+    #elif model_name ==model_list[1]:
+        #model = UNet_Variational(d1=256, d2=16, channels=channels, dropout=dropout).to(device)
 
 
     simulationpath = '/beegfs/project/bmbf-need/spectral-analysis/cnn-spectral-analysis/data/Impact_Echo_Machine_Learning/database_autoencoder/new_approach/simulated_set/IE_2D_random_setup_sound/B_scans_rgb/sound'
@@ -47,6 +49,8 @@ if __name__ == '__main__':
         # If the directory or model file doesn't exist, print this message
         print(f"A new folder and model '{model_name}' will be created.")
 
+
+
     for finetuning in [False,True]:
         if finetuning==True:
             dataset = CustomImageDataset(transform='color',
@@ -64,13 +68,8 @@ if __name__ == '__main__':
 
         else:
             dataset = CustomImageDataset(transform='color',
-                                         path=simulationpath)  # transform = 'gray' for grayscale pictures
+                                         path=finetuningpath)  # transform = 'gray' for grayscale pictures
             model.train_model(dataset = dataset, num_epochs= epoch,batch_size= batch,
                           learning_rate=lr, model_name=model_name)
 
 
-
-
-    #def train_model(self, dataset, num_epochs=50, batch_size=64, learning_rate, model_name)
-    #model_type = 'CNN3D' # modeltypes: CNN3D, CNN1D3D
-    #history, model = train(lr, batch, epochs, model_type)
