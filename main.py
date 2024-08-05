@@ -1,5 +1,5 @@
 import os
-from models import UNet, UNet_color, UNet_Variational
+from models import UNet, UNet_color
 from dataset import CustomImageDataset
 import torch
 
@@ -18,19 +18,11 @@ if __name__ == '__main__':
 
 
     model_list= [f'UNet_2D_2Blocks_{dropout}dropout_{channels}channels_lr{lr}',
-                 f'UNet_2D_VAE_2Layer_{color}_{dropout}dropout_{channels}channels_epoch{epoch}_lr{lr}',
                  f'UNet_2D_2Blocks_{dropout}dropout_{channels}channels_lr{lr}_nopretraining']
     # this is for version 2 'training_class':
 
-    model_name = model_list[2]
+    model_name = model_list[1]
     model = UNet_color(d1=256, d2=16, channels=channels, dropout=dropout).to(device)
-
-    # chose Model based on Modelname
-    #if model_name == model_list[0] or model_name == model_list[2]:
-        #model = UNet_color(d1=256, d2=16, channels=channels, dropout=dropout).to(device)
-    #elif model_name ==model_list[1]:
-        #model = UNet_Variational(d1=256, d2=16, channels=channels, dropout=dropout).to(device)
-
 
     simulationpath = '/beegfs/project/bmbf-need/spectral-analysis/cnn-spectral-analysis/data/Impact_Echo_Machine_Learning/database_autoencoder/new_approach/simulated_set/IE_2D_random_setup_sound/B_scans_rgb/sound'
     finetuningpath = '/beegfs/project/bmbf-need/spectral-analysis/cnn-spectral-analysis/data/Impact_Echo_Machine_Learning/database_autoencoder/new_approach/realworld_DATA/training/sound'
