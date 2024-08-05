@@ -112,68 +112,6 @@ class UNet_colorx3(UNet):
         self.dblock2=DecoderBlock(3*self.channel_parameter,3,dropout = dropout,padding=(0,0))    # additional 0 channels for the crossconnection
 
 
-
-class UNet_Variational(BaseModel_var):
-    def __init__(self, d1 = 256, d2 = 16, channels=64, dropout=0):
-        super(UNet_Variational, self).__init__()
-        # initialize how much outputchannels the layers should have
-        self.channel_parameter = channels
-
-        # Encoder
-        self.encoder1 = EncoderBlock(in_c=3, out_c=self.channel_parameter, dropout=dropout)
-        self.encoder2 = EncoderBlock(in_c=self.channel_parameter, out_c=2 * self.channel_parameter, dropout=dropout)
-
-        # Decoder
-        self.dblock1 = DecoderBlock(2 * self.channel_parameter, self.channel_parameter, dropout=dropout,
-                                    padding=(0, 0))  # additional 0 channels for the crossconnection
-        self.dblock2 = DecoderBlock(self.channel_parameter, 3, dropout=dropout,
-                                    padding=(0, 0))  # additional 0 channels for the crossconnection
-
-        # Middle mu:
-        self.conv1mu = nn.Conv2d(self.channel_parameter * 2, self.channel_parameter * 2, kernel_size=3, padding=1,
-                                 padding_mode='reflect')
-        self.gn1mu = nn.GroupNorm(num_groups=int((self.channel_parameter * 2) / 8),
-                                  num_channels=self.channel_parameter * 2)
-        self.conv2mu = nn.Conv2d(self.channel_parameter * 2, self.channel_parameter * 2, kernel_size=3, padding=1,
-                                 padding_mode='reflect')
-        self.gn2mu = nn.GroupNorm(num_groups=int((self.channel_parameter * 2) / 8),
-                                  num_channels=self.channel_parameter * 2)
-
-        # Middle logvar:
-        self.conv1logvar = nn.Conv2d(self.channel_parameter * 2, self.channel_parameter * 2, kernel_size=3, padding=1,
-                                     padding_mode='reflect')
-        self.gn1logvar = nn.GroupNorm(num_groups=int((self.channel_parameter * 2) / 8),
-                                      num_channels=self.channel_parameter * 2)
-        self.conv2logvar = nn.Conv2d(self.channel_parameter * 2, self.channel_parameter * 2, kernel_size=3, padding=1,
-                                     padding_mode='reflect')
-        self.gn2logvar = nn.GroupNorm(num_groups=int((self.channel_parameter * 2) / 8),
-                                     num_channels = self.channel_parameter * 2)
-
-    def reparameterize(self, mu, logvar):
-        std = torch.exp(0.5*logvar)
-        eps = torch.randn_like(std)
-        return mu + eps*std
-    def forward(self, x):
-        # Encoder steps
-        x = self.encoder1(x)
-        x = self.encoder2(x)
-
-        # Apply the new layers here, between the encoder and decoder
-        # Middle Variational:
-        mu = self.conv1mu(self.gn1mu(self.conv2mu(self.gn2mu(x))))
-        logvar = self.conv1logvar(self.gn1logvar(self.conv2logvar(self.gn2logvar(x))))
-
-        x = self.reparameterize(mu, logvar)
-
-        # Decoder steps
-        x = self.dblock1(x)
-        x = self.dblock2(x)
-
-        return x, mu, logvar
-
-
-
-
 if __name__ == '__main__':
     # work in progress on UNet_timeconv
     print(torch.cuda.is_available())
